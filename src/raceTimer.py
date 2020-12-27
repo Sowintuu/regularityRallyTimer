@@ -1,6 +1,12 @@
 import time
 import os
 import pathlib
+from math import floor
+
+from util import decode_seconds
+
+
+# TODO: Add autosave file
 
 
 class RaceTimer(object):
@@ -12,18 +18,17 @@ class RaceTimer(object):
         self.config_dir = os.path.join(self.root_dir, 'config')
 
         # Configuration.
-        self.cur_config = None
-        self.cur_config_file = None
+        self.config = None
+        self.config_file = None
 
         # Lap state.
-        # 0: No config
-        # 1: Ready
+        # 0: Ready
+        # 1: Normal lap (sprint)
         # 2: Untimed lap
         # 3: Set lap
         # 4: Confirmation lap
-        # 5: Sprint lap
         self.state = 0
-        self.state_count = -1   # Initialised with -1 to be set to 0 on start.
+        self.state_count = -1  # Initialised with -1 to be set to 0 on start.
 
         # Coordinates.
         self.finish_line_coordinates = [None] * 2
@@ -31,21 +36,24 @@ class RaceTimer(object):
         # Times.
         self.time_stamps = []
         self.lap_times = []
+        self.lap_times_decoded = []
         self.set_time_current = None
 
         self.curlap_seconds = None
+        self.curlap_decoded = [0.0] * 3
         self.curlap_string = None
         self.curlap_countdown_seconds = None
         self.curlap_countdown_text = None
 
     # Method to be executed continuously.
-    def mainloop_task(self):
+    def update(self):
         # Get current time stamp.
         current_time_stamp = time.time()
 
         # Get current lap seconds.
-        if self.state > 1:
+        if self.state:
             self.curlap_seconds = current_time_stamp - self.time_stamps[-1]
+            self.curlap_decoded = decode_seconds(self.curlap_seconds)
 
         # If confirmation lap, get countdown seconds.
         if self.state == 4:
@@ -53,11 +61,7 @@ class RaceTimer(object):
 
     # Method to start a new lap.
     # Stops time for previous lap and sets state.
-    def new_lap(self, lap_type):
-
-        # If no config loaded, return False.
-        if not self.state:
-            return False
+    def new_lap(self, *args):
 
         # Append current time as stamp.
         self.time_stamps.append(time.time())
@@ -67,20 +71,32 @@ class RaceTimer(object):
 
         # Get lap time if not first lap. $
         if len(self.time_stamps) > 1:
-            self.lap_times.append(self.time_stamps[-1] - self.time_stamps[-2])
+            # Get time in seconds.
+            time_seconds = self.time_stamps[-1] - self.time_stamps[-2]
+
+            # Add time in seconds and decoded to the related attributes.
+            self.lap_times.append(time_seconds)
+            self.lap_times_decoded.append(decode_seconds(time_seconds))
 
         # If last lap was set lap, save new set time
         if self.state == 3:
             self.set_time_current = self.lap_times[-1]
 
-        # Get current lap state.
-        self.state = self.cur_config[self.state_count]
-
-        return True
+        # Get next lap state.
+        if self.config is not None:
+            # If config is loaded, get state from config.
+            self.state = self.config[self.state_count]
+        else:
+            if len(args):
+                # If no config is loaded, get state from optional argument.
+                self.state = args[0]
+            else:
+                # If nothing is given, start normal lap.
+                self.state = 1
 
     # Reset the timer to the currently loaded configuration.
     def reset_config(self):
-        self.state = 1
+        self.state = 0
         self.state_count = -1
         self.time_stamps = []
         self.lap_times = []
@@ -93,12 +109,17 @@ class RaceTimer(object):
             config_text = config_file.readlines()
 
         # Read configuration.
-        self.cur_config = []
+        self.config = []
         # TODO: Except non numeric char.
         for k in config_text[0]:
-            self.cur_config.append(int(k) + 2)
+            self.config.append(int(k) + 2)
 
-        # Write state.
-        self.state = 1
+    # Update lap attributes and print current time.
+    def debug_update(self):
+        self.update()
+        print('Time: {:02d}:{:02d}:{}'.format(self.curlap_decoded[0],
+                                              self.curlap_decoded[1],
+                                              self.curlap_decoded[2]))
 
-
+    def debug_new_lap(self):
+        self.new_lap()
