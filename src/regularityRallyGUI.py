@@ -3,11 +3,10 @@
 
 import os
 import pathlib
+from math import floor
 from tkinter import Tk, Menu, Label, Text, filedialog
 from tkinter.ttk import Progressbar, Style
 import tkinter.font as tk_font
-
-import pyttsx3
 
 from regularityRally import RegularityRally
 
@@ -48,9 +47,6 @@ class RegularityRallyGUI(RegularityRally):
 
         # Get start time.
         self.time_stamps = []
-
-        # Init speak engine.
-        self.speak_engine = pyttsx3.init()
 
         # Window initialization.
         self.init_window()
@@ -106,9 +102,9 @@ class RegularityRallyGUI(RegularityRally):
 
         # Time display row.
         row_count += 1
-        self.l_cur_lap_disp = Label(self.master, text='__:__:__', anchor='w', font=self.font)
+        self.l_cur_lap_disp = Label(self.master, text='__:__:__._', anchor='w', font=self.font)
         self.l_cur_lap_disp.grid(row=row_count, column=0)
-        self.l_set_lap_disp = Label(self.master, text='__:__:__', anchor='w', font=self.font)
+        self.l_set_lap_disp = Label(self.master, text='__:__:__._', anchor='w', font=self.font)
         self.l_set_lap_disp.grid(row=row_count, column=1)
         self.master.grid_rowconfigure(row_count, weight=1)
 
@@ -125,7 +121,7 @@ class RegularityRallyGUI(RegularityRally):
                                       'sticky': 'nswe'})])
         self.bar_progress = Progressbar(self.master, orient='horizontal', length=1000, mode='determinate',
                                         style="LabeledProgressbar")
-        self.bar_progress.grid(row=row_count, column=0, columnspan=3)
+        self.bar_progress.grid(row=row_count, column=0, columnspan=3, ipady=25)
 
         # Column configuration.
         self.master.grid_columnconfigure(0, weight=1)
@@ -146,10 +142,10 @@ class RegularityRallyGUI(RegularityRally):
             self.reg_update()
 
             # Update current lap time display.
-            self.l_cur_lap_disp['text'] = '{:02}:{:02}:{:02}.{:03}'.format(self.curlap_decoded[0],
-                                                                           self.curlap_decoded[1],
-                                                                           self.curlap_decoded[2],
-                                                                           self.curlap_decoded[3])
+            self.l_cur_lap_disp['text'] = '{:02}:{:02}:{:02}.{}'.format(self.curlap_decoded[0],
+                                                                        self.curlap_decoded[1],
+                                                                        self.curlap_decoded[2],
+                                                                        floor(self.curlap_decoded[3]/100))
 
             # Update countdown display, if confirmation lap.
             if self.state == 4:
@@ -202,48 +198,20 @@ class RegularityRallyGUI(RegularityRally):
                     state_char = 'F'
 
                 # Set char for each lap.
-                self.t_laps.insert('end', '  {}: {:02}:{:02}:{:02}.{:03} {}\n'.format(lt_id + 1,
-                                                                                      lt[0], lt[1], lt[2], lt[3],
-                                                                                      state_char))
+                self.t_laps.insert('end', '{:>2}: {:02}:{:02}:{:02}.{:03} {}\n'.format(lt_id + 1,
+                                                                                       lt[0], lt[1], lt[2], lt[3],
+                                                                                       state_char))
 
             # Update GUI items related to set lap.
             if self.cur_set_time is not None:
                 # Update shown set time.
-                self.l_set_lap_disp['text'] = '{:02}:{:02}:{:02}.{:03}'.format(self.cur_set_time_decoded[0],
+                self.l_set_lap_disp['text'] = '{:02}:{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[0],
                                                                                self.cur_set_time_decoded[1],
                                                                                self.cur_set_time_decoded[2],
-                                                                               self.cur_set_time_decoded[3])
+                                                                               floor(self.cur_set_time_decoded[3]/100))
 
                 # Update progressbar maximum to set lap time to show countdown.
                 self.bar_progress['maximum'] = self.cur_set_time
-
-            # # 2: Untimed lap
-            # elif self.state == 2:
-            #     pass
-            #
-            # # 3: Set lap
-            # elif self.state == 3:
-            #     pass
-            #
-            # # 4: Confirmation lap
-            # elif self.state == 4:
-            #     pass
-
-        # print('1 pressed')
-        # self.speak_engine.say("5")
-        # self.speak_engine.runAndWait()
-        # time.sleep(1)
-        # self.speak_engine.say("4")
-        # self.speak_engine.runAndWait()
-        # time.sleep(1)
-        # self.speak_engine.say("3")
-        # self.speak_engine.runAndWait()
-        # time.sleep(1)
-        # self.speak_engine.say("2")
-        # self.speak_engine.runAndWait()
-        # time.sleep(1)
-        # self.speak_engine.say("1")
-        # self.speak_engine.runAndWait()
 
 
 if __name__ == '__main__':
