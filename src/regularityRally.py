@@ -3,7 +3,6 @@
 
 import os
 import subprocess
-import pyttsx3
 import pygame
 
 from raceTimer import RaceTimer
@@ -36,7 +35,6 @@ class RegularityRally(RaceTimer):
         self.beep_done = False
 
         # Speak engine.
-        self.speak_engine = pyttsx3.init()
         self.countdown_checks = self.COUNTDOWN_TEMPLATE
 
         # Beep engine.
