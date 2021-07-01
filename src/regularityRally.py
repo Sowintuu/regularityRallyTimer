@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import time
 import subprocess
 import pygame
 
@@ -10,7 +11,7 @@ from raceTimer import RaceTimer
 
 class RegularityRally(RaceTimer):
     COUNTDOWN_TEMPLATE = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-    SOUND_DELAY = 0.25
+    SOUND_DELAY = 0.1
 
     def __init__(self):
         super().__init__()
@@ -23,6 +24,10 @@ class RegularityRally(RaceTimer):
 
         # Regularity config.
         self.config = {}
+        self.mark_count = 0
+        self.mark_stamps = []
+        self.mark_labels = []
+        self.mark_numbers = []
 
         # Set time.
         self.cur_set_time = None
@@ -54,8 +59,7 @@ class RegularityRally(RaceTimer):
             if self.cur_countdown_num is not None:
                 # Check if countdown mark is reached and say it.
                 if self.curlap_countdown_seconds <= self.cur_countdown_num + self.SOUND_DELAY:
-                    subprocess.Popen('{} {}'.format(os.path.join(self.folder_support, 'espeak.exe'),
-                                                    self.cur_countdown_num))
+                    self.espeak_say(self.cur_countdown_num)
 
                     # Check if countdown list is not empty and pop next item. Else apply None.
                     if self.countdown_checks:
@@ -66,6 +70,12 @@ class RegularityRally(RaceTimer):
                 # If last mark was read, check for beep on time 0.
                 self.beep_object.play()
                 self.beep_done = True
+
+            # Process marks reading.
+            if len(self.mark_labels) > self.mark_count:
+                if self.curlap_countdown_seconds <= self.mark_numbers[self.mark_count]:
+                    self.espeak_say(self.mark_labels[self.mark_count])
+                    self.mark_count += 1
 
     # Start new lap.
     def reg_new_lap(self, *args):
@@ -100,11 +110,35 @@ class RegularityRally(RaceTimer):
             self.cur_set_time = self.lap_times[-1]
             self.cur_set_time_decoded = self.lap_times_decoded[-1]
 
+            # Also set calculate countdown times for marks.
+            for ma_id, ma in enumerate(self.config['marks']):
+                if len(self.mark_stamps) > ma_id:
+                    self.config['marks'][ma] = self.time_stamps[-1] - self.mark_stamps[ma_id]
+                else:
+                    break
+
         # Reset countdown template at start of confirmation lap.
         if self.state == 4:
             self.countdown_checks = self.COUNTDOWN_TEMPLATE.copy()
             self.cur_countdown_num = self.countdown_checks.pop(0)
             self.beep_done = False
+            if self.config['marks']:
+                self.mark_numbers = list(self.config['marks'].values())
+
+        # Reset mark count.
+        self.mark_count = 0
+        if self.state == 3:
+            self.mark_stamps = []
+
+    def espeak_say(self, text):
+        subprocess.Popen('{} {}'.format(os.path.join(self.folder_support, 'eSpeak', 'command_line', 'espeak.exe'),
+                                        text))
+
+    # Get the time stamp of a mark for state 3 (set lap).
+    def mark_reached(self):
+        if self.state == 3:
+            self.mark_stamps.append(time.time())
+            self.mark_count += 1
 
     # Reset the timer to the currently loaded configuration.
     def reset_config(self):
@@ -125,7 +159,9 @@ class RegularityRally(RaceTimer):
 
         # Re-Init config attribute.
         self.config = {'states': [],
-                       'marks': {}}
+                       'marks': {},
+                       'misc': {},
+                       }
 
         # Read basic state config.
         for k in config_text[0].strip():
@@ -146,6 +182,5 @@ class RegularityRally(RaceTimer):
                 if section in self.config:
                     self.config[section][line_split[0].strip()] = line_split[1].strip()
 
-            # TODO: Sort marks.
-
-        pass
+        if self.config['marks']:
+            self.mark_labels = list(self.config['marks'].keys())

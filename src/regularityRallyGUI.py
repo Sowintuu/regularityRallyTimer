@@ -36,7 +36,7 @@ class RegularityRallyGUI(RegularityRally):
         self.h = None
 
         self.l_state = None
-        self.l_countdown = None
+        self.l_mark = None
         self.l_cur_lap = None
         self.l_cur_lap_disp = None
         self.l_set_lap = None
@@ -86,8 +86,8 @@ class RegularityRallyGUI(RegularityRally):
         row_count = 0
         self.l_state = Label(self.master, text='Select Configuration', font=self.font)
         self.l_state.grid(row=row_count, column=0)
-        self.l_countdown = Label(self.master, text='', font=self.font)
-        self.l_countdown.grid(row=row_count, column=1)
+        self.l_mark = Label(self.master, text='', font=self.font)
+        self.l_mark.grid(row=row_count, column=1)
         self.t_laps = Text(self.master, width=20, font=("Consolas", 32))
         self.t_laps.grid(row=row_count, column=2, rowspan=3)
         self.master.grid_rowconfigure(row_count, weight=1)
@@ -129,6 +129,7 @@ class RegularityRallyGUI(RegularityRally):
 
         # Define Binds.
         self.master.bind('1', self.one_cb)
+        self.master.bind('2', self.two_cb)
 
         # Start master mainloop.
         self.master.after(10, self.gui_update)
@@ -149,9 +150,15 @@ class RegularityRallyGUI(RegularityRally):
 
             # Update countdown display, if confirmation lap.
             if self.state == 4:
+                # Update progress bar.
                 self.bar_progress['value'] = self.curlap_countdown_seconds
                 self.style_progress.configure("LabeledProgressbar", text='{:.2f}'.format(self.curlap_countdown_seconds))
                 self.bar_progress.update()
+
+                # Update mark label.
+                if self.mark_count < len(self.mark_labels):
+                    self.l_mark['text'] = self.mark_labels[self.mark_count]
+
             else:
                 self.bar_progress['value'] = 0
                 self.style_progress.configure("LabeledProgressbar", text='')
@@ -188,6 +195,10 @@ class RegularityRallyGUI(RegularityRally):
             # Change label.
             self.l_state['text'] = self.STATES[self.state]
 
+            if self.state in [3, 4]:
+                marks = list(self.config['marks'].keys())
+                self.l_mark['text'] = marks[0]
+
             # Update lap times text field.
             self.t_laps.delete(1.0, 'end')
             for lt_id, lt in enumerate(self.lap_times_decoded):
@@ -212,6 +223,17 @@ class RegularityRallyGUI(RegularityRally):
 
                 # Update progressbar maximum to set lap time to show countdown.
                 self.bar_progress['maximum'] = self.cur_set_time
+
+    def two_cb(self, _):
+        # Execute superclass method.
+        self.mark_reached()
+
+        # Write next mark to label.
+        marks = list(self.config['marks'].keys())
+        if len(marks) > self.mark_count:
+            self.l_mark['text'] = marks[self.mark_count]
+        else:
+            self.l_mark['text'] = 'countdown'
 
 
 if __name__ == '__main__':
