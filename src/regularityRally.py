@@ -4,7 +4,6 @@
 import os
 import time
 import subprocess
-import pyttsx3
 import pygame
 
 from raceTimer import RaceTimer
@@ -39,9 +38,9 @@ class RegularityRally(RaceTimer):
         self.curlap_countdown_text = None  # TODO: Check if needed
         self.cur_countdown_num = 0
         self.beep_done = False
+        self.sound_delay = 0
 
         # Speak engine.
-        self.speak_engine = pyttsx3.init()
         self.countdown_checks = self.COUNTDOWN_TEMPLATE
 
         # Beep engine.
@@ -133,7 +132,7 @@ class RegularityRally(RaceTimer):
             self.mark_stamps = []
 
     def espeak_say(self, text):
-        subprocess.Popen('{} {}'.format(os.path.join(self.folder_support, 'eSpeak', 'command_line', 'espeak.exe'),
+        subprocess.Popen('{} {}'.format(self.config['misc']['espeakpath'],
                                         text))
 
     # Get the time stamp of a mark for state 3 (set lap).
@@ -186,3 +185,6 @@ class RegularityRally(RaceTimer):
 
         if self.config['marks']:
             self.mark_labels = list(self.config['marks'].keys())
+
+        if 'sound_delay' in self.config['misc']:
+            self.sound_delay = float(self.config['misc']['sound_delay'])
