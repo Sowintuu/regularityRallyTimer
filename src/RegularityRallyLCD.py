@@ -14,7 +14,6 @@ from regularityRally import RegularityRally
 try:
     # noinspection PyUnresolvedReferences
     import RPi.GPIO as GPIO
-
     debug = False
 except ImportError:
     # Else assume, it is called in windows and start debug mode.
@@ -56,6 +55,7 @@ class RegularityRallyLCD(RegularityRally):
             self.lcd_init()
 
         if debug or self.no_button:
+
             pygame.init()
             pygame.display.set_mode((100, 100))
 
@@ -85,10 +85,14 @@ class RegularityRallyLCD(RegularityRally):
             # Detect key or button press.
             if not debug and not self.no_button:
                 # Detect button press.
-                # TODO: Insert GPIO button detection.
-                pass
+                if GPIO.input(self.gpio['button_1']) == GPIO.HIGH:
+                    self.cb_button_1()
+                if GPIO.input(self.gpio['button_2']) == GPIO.HIGH:
+                    self.cb_button_2()
+
             else:
                 # Detect button press.
+                # TODO: Reset to keyboard.
                 for ev in pygame.event.get():
                     if ev.type == pygame.KEYDOWN:
                         if ev.key == pygame.K_KP1:
@@ -132,7 +136,6 @@ class RegularityRallyLCD(RegularityRally):
                 countdown_str = '{:04.1f}'.format(self.curlap_countdown_seconds)
 
                 # Get set time and use as ref time.
-                # TODO: Show last time, if not confirmation lap.
                 ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
                                                           self.cur_set_time_decoded[2],
                                                           floor(self.cur_set_time_decoded[3] / 100))
@@ -251,8 +254,11 @@ class RegularityRallyLCD(RegularityRally):
         time.sleep(self.gpio['e_delay'])
 
     def lcd_init(self):
+        # Set numbering to BCM and disable warnings.
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
+
+        # Set GPIO setting to output for LCD.
         GPIO.setup(self.gpio['lcd_e'], GPIO.OUT)
         GPIO.setup(self.gpio['lcd_rs'], GPIO.OUT)
         GPIO.setup(self.gpio['lcd_data4'], GPIO.OUT)
@@ -260,6 +266,11 @@ class RegularityRallyLCD(RegularityRally):
         GPIO.setup(self.gpio['lcd_data6'], GPIO.OUT)
         GPIO.setup(self.gpio['lcd_data7'], GPIO.OUT)
 
+        # Set GPIO setting to input for buttons.
+        GPIO.setup(self.gpio['button_1'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.gpio['button_2'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+        # Clear the LCD initially. (?)
         self.lcd_send_byte(0x33, GPIO.LOW)
         self.lcd_send_byte(0x32, GPIO.LOW)
         self.lcd_send_byte(0x28, GPIO.LOW)
