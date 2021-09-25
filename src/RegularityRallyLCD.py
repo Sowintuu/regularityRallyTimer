@@ -55,6 +55,9 @@ class RegularityRallyLCD(RegularityRally):
         self.gpio = {}
         self.read_gpio_cfg()
 
+        # Init LCD config.
+        self.lcd_init()
+
         # Run mainloop
         self.mainloop()
 
@@ -223,7 +226,7 @@ class RegularityRallyLCD(RegularityRally):
         GPIO.output(self.gpio['lcd_e'], GPIO.LOW)
         time.sleep(self.gpio['e_delay'])
 
-    def display_init(self):
+    def lcd_init(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.gpio['lcd_e'], GPIO.OUT)
