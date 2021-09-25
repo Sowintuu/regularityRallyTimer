@@ -83,7 +83,7 @@ class RegularityRallyLCD(RegularityRally):
 
         # Init variables for state <=0 (No config or ready).
         lap_time_str = '--:--.-'
-        set_time_str = '--:--.-'
+        ref_time_str = '--:--.-'
         countdown_str = '--.-'
         lap_count = 0
         lap_type_char = self.STATES[self.state]
@@ -108,11 +108,17 @@ class RegularityRallyLCD(RegularityRally):
                 # Get countdown.
                 countdown_str = '{:04.1f}'.format(self.curlap_countdown_seconds)
 
-                # Get set time.
+                # Get set time and use as ref time.
                 # TODO: Show last time, if not confirmation lap.
-                set_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
+                ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
                                                           self.cur_set_time_decoded[2],
                                                           floor(self.cur_set_time_decoded[3] / 100))
+
+            elif len(self.lap_times):
+                # If not in confirmation lap. Show last lap as ref time.
+                ref_time_str = '{:02}:{:02}.{:01}'.format(self.lap_times_decoded[-1][1],
+                                                          self.lap_times_decoded[-1][2],
+                                                          floor(self.lap_times_decoded[-1][3] / 100))
 
             # Get mark label.
             if self.state in [3, 4]:
@@ -122,7 +128,7 @@ class RegularityRallyLCD(RegularityRally):
                     mark_str = 'FINISH'
 
         # Compose string.
-        self.display_string = ['{}  {}'.format(lap_time_str, set_time_str),
+        self.display_string = ['{}  {}'.format(lap_time_str, ref_time_str),
                                '{} {: 2} {} {}'.format(countdown_str, lap_count, lap_type_char, mark_str)]
 
         # Schedule next call.

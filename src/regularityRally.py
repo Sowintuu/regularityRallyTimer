@@ -5,6 +5,7 @@ import os
 import time
 import subprocess
 import pygame
+import platform
 
 from raceTimer import RaceTimer
 
@@ -42,6 +43,7 @@ class RegularityRally(RaceTimer):
 
         # Speak engine.
         self.countdown_checks = self.COUNTDOWN_TEMPLATE
+        self.os = platform.system()
 
         # Beep engine.
         pygame.init()
@@ -132,8 +134,11 @@ class RegularityRally(RaceTimer):
             self.mark_stamps = []
 
     def espeak_say(self, text):
-        subprocess.Popen('{} {}'.format(self.config['misc']['espeakpath'],
-                                        text))
+        if self.os == 'Windows':
+            subprocess.Popen('{} {}'.format(self.config['misc']['espeakpath'],
+                                            text))
+        else:
+            subprocess.Popen('espeak {}'.format(text))
 
     # Get the time stamp of a mark for state 3 (set lap).
     def mark_reached(self):
