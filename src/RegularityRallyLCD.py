@@ -176,9 +176,11 @@ class RegularityRallyLCD(RegularityRally):
         self.mark_reached()
 
     def read_gpio_cfg(self):
+        # Init config.
         cfg = configparser.ConfigParser()
         cfg.read(os.path.join(self.root_dir, 'supportFiles', 'GPIO.cfg'))
 
+        # Convert to int or float.
         for gp in cfg['Main']:
             try:
                 self.gpio[gp] = cfg.getint('Main', gp)
@@ -187,6 +189,10 @@ class RegularityRallyLCD(RegularityRally):
                     self.gpio[gp] = cfg.getfloat('Main', gp)
                 except ValueError:
                     self.gpio[gp] = cfg.get('Main', gp)
+
+        # Convert from hex string to int.
+        self.gpio['lcd_line_1'] = int(self.gpio['lcd_line_1'], 16)
+        self.gpio['lcd_line_2'] = int(self.gpio['lcd_line_2'], 16)
 
     def lcd_send_byte(self, bits, mode):
         # Set Pins to LOW
