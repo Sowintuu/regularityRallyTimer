@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import sys
 import time
 import keyboard
 import configparser
@@ -14,6 +15,7 @@ from regularityRally import RegularityRally
 try:
     # noinspection PyUnresolvedReferences
     import RPi.GPIO as GPIO
+    debug = False
 except ImportError:
     # Else assume, it is called in windows and start debug mode.
     debug = True
@@ -238,4 +240,4 @@ class RegularityRallyLCD(RegularityRally):
 
 
 if __name__ == '__main__':
-    regRal = RegularityRallyLCD()
+    regRal = RegularityRallyLCD(no_button=True)
