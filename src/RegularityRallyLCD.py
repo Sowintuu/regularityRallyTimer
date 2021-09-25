@@ -29,7 +29,7 @@ class RegularityRallyLCD(RegularityRally):
               3: 'S',  # Set Lap
               4: 'C'}  # Confirmation Lap
 
-    BUTTON_DEBOUNCE_TIME = 0.5  # s
+    BUTTON_DEBOUNCE_TIME_DEFAULT = 0.5  # s
 
     def __init__(self, no_button=False):
         super().__init__()
@@ -63,6 +63,13 @@ class RegularityRallyLCD(RegularityRally):
         self.read_config(os.path.join(self.config_dir, 'LCD.cfg'))
         self.state = 0
 
+        # Set button debounce time.
+        self.button_debounce_time = float(self.config['misc'].get('button_debounce_time',
+                                                                  self.BUTTON_DEBOUNCE_TIME_DEFAULT))
+
+        # Print init finished.
+        print('Initialization finished.')
+
         # Run mainloop
         self.mainloop()
 
@@ -85,9 +92,9 @@ class RegularityRallyLCD(RegularityRally):
             # Detect key or button press.
             if not debug and not self.no_button:
                 # Detect button press.
-                if GPIO.input(self.gpio['button_1']) == GPIO.HIGH:
+                if GPIO.input(self.gpio['button_1']) == GPIO.HIGH and self.check_last_press():
                     self.cb_button_1()
-                if GPIO.input(self.gpio['button_2']) == GPIO.HIGH:
+                if GPIO.input(self.gpio['button_2']) == GPIO.HIGH and self.check_last_press():
                     self.cb_button_2()
 
             else:
@@ -179,7 +186,7 @@ class RegularityRallyLCD(RegularityRally):
         timedelta_pressed = cur_time - self.time_last_press
 
         # Check if time delta greater than debounce time.
-        if timedelta_pressed > timedelta(seconds=self.BUTTON_DEBOUNCE_TIME):
+        if timedelta_pressed > timedelta(seconds=self.button_debounce_time):
             valid_press = True
             self.time_last_press = cur_time
         else:
