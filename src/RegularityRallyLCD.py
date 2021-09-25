@@ -2,9 +2,8 @@
 # -*- coding: UTF-8 -*-
 
 import os
-import sys
 import time
-import keyboard
+import pygame
 import configparser
 from datetime import datetime, timedelta
 from math import floor
@@ -15,6 +14,7 @@ from regularityRally import RegularityRally
 try:
     # noinspection PyUnresolvedReferences
     import RPi.GPIO as GPIO
+
     debug = False
 except ImportError:
     # Else assume, it is called in windows and start debug mode.
@@ -43,40 +43,58 @@ class RegularityRallyLCD(RegularityRally):
         # Init time for debounce to a date in the past.
         self.time_last_press = datetime(2021, 1, 1, 0, 0, 0, 0)
 
-        # Print placeholder if debug mode.
+        # Actions specific for debug or no debug mode.
         if debug:
+            # Print placeholder if debug mode.
             print('{} - {}'.format(self.display_string[0], self.display_string[1]), end='')
+        else:
+            # Read gpio config.
+            self.gpio = {}
+            self.read_gpio_cfg()
+
+            # Init LCD config.
+            self.lcd_init()
+
+        if debug or self.no_button:
+            pygame.init()
+            pygame.display.set_mode((100, 100))
 
         # Read config.
         self.read_config(os.path.join(self.config_dir, 'LCD.cfg'))
         self.state = 0
-
-        # Read gpio config.
-        self.gpio = {}
-        self.read_gpio_cfg()
-
-        # Init LCD config.
-        self.lcd_init()
 
         # Run mainloop
         self.mainloop()
 
     def mainloop(self):
         while True:
+            # Update the string for display.
             self.update_display_string()
 
+            # Handle events depending on mode.
+            # not no_button and not debug: show output on display and detect GPIO press.
+            # debug: show output in command line.
+            # no_button and not debug: show output on display, but detect key strokes.
+
+            # Update LCD display or command line.
+            if debug:
+                self.print_display_debug()
+            else:
+                self.print_display()
+
+            # Detect key or button press.
             if not debug and not self.no_button:
+                # Detect button press.
                 # TODO: Insert GPIO button detection.
                 pass
             else:
-                if debug:
-                    self.print_display_debug()
-                else:
-                    self.print_display()
-                if keyboard.is_pressed('1') and self.check_last_press():
-                    self.cb_button_1()
-                elif keyboard.is_pressed('2') and self.check_last_press():
-                    self.cb_button_2()
+                # Detect button press.
+                for ev in pygame.event.get():
+                    if ev.type == pygame.KEYDOWN:
+                        if ev.key == pygame.K_KP1:
+                            self.cb_button_1()
+                        if ev.key == pygame.K_KP2:
+                            self.cb_button_2()
 
     # Writes the display string for the LCD display.
     # Consists of two lines with exactly 16 chars. Format as below
