@@ -285,4 +285,4 @@ class RegularityRallyLCD(RegularityRally):
 
 
 if __name__ == '__main__':
-    regRal = RegularityRallyLCD(no_button=True)
+    regRal = RegularityRallyLCD()
