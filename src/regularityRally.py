@@ -138,7 +138,9 @@ class RegularityRally(RaceTimer):
             subprocess.Popen('{} {}'.format(self.config['misc']['espeakpath'],
                                             text))
         else:
-            subprocess.Popen('espeak {}'.format(text))
+            # TODO: Fix espeak for linux.
+            pass
+            # subprocess.Popen('espeak {}'.format(text))
 
     # Get the time stamp of a mark for state 3 (set lap).
     def mark_reached(self):
