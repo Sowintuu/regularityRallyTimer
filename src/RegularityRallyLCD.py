@@ -176,7 +176,14 @@ class RegularityRallyLCD(RegularityRally):
         cfg = configparser.ConfigParser()
         cfg.read(os.path.join(self.root_dir, 'supportFiles', 'GPIO.cfg'))
 
-        self.gpio = dict(cfg['Main'])
+        for gp in cfg['Main']:
+            try:
+                self.gpio[gp] = cfg.getint('Main', gp)
+            except ValueError:
+                try:
+                    self.gpio[gp] = cfg.getfloat('Main', gp)
+                except ValueError:
+                    self.gpio[gp] = cfg.get('Main', gp)
 
     def lcd_send_byte(self, bits, mode):
         # Set Pins to LOW
