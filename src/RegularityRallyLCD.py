@@ -93,8 +93,10 @@ class RegularityRallyLCD(RegularityRally):
             if not debug and not self.no_button:
                 # Detect button press.
                 if GPIO.input(self.gpio['button_1']) == GPIO.HIGH and self.check_last_press():
+                    print('Button 1')
                     self.cb_button_1()
                 if GPIO.input(self.gpio['button_2']) == GPIO.HIGH and self.check_last_press():
+                    print('Button 2')
                     self.cb_button_2()
 
             else:
