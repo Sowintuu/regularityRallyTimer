@@ -112,15 +112,21 @@ class RegularityRallyLCD(RegularityRally):
                                 self.cb_button_2()
 
         # Except errors and print Error in display.
-        except:
+        except Exception as e:
+            # Get current ref time.
             ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
                                                       self.cur_set_time_decoded[2],
                                                       floor(self.cur_set_time_decoded[3] / 100))
+
+            # Update display string with error message and display it.
             self.display_string = ['ERROR!          ', 'Ref: {}    '.format(ref_time_str)]
             if debug:
                 self.print_display_debug()
             else:
                 self.print_display()
+
+            # Re-raise the exception.
+            raise e
 
     # Writes the display string for the LCD display.
     # Consists of two lines with exactly 16 chars. Format as below
