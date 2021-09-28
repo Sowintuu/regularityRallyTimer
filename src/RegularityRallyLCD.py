@@ -14,6 +14,7 @@ from regularityRally import RegularityRally
 try:
     # noinspection PyUnresolvedReferences
     import RPi.GPIO as GPIO
+
     debug = False
 except ImportError:
     # Else assume, it is called in windows and start debug mode.
@@ -55,7 +56,6 @@ class RegularityRallyLCD(RegularityRally):
             self.lcd_init()
 
         if debug or self.no_button:
-
             pygame.init()
             pygame.display.set_mode((100, 100))
 
@@ -74,40 +74,53 @@ class RegularityRallyLCD(RegularityRally):
         self.mainloop()
 
     def mainloop(self):
-        while True:
-            # Update the string for display.
-            self.update_display_string()
+        # noinspection PyBroadException
+        try:
+            while True:
+                # Update the string for display.
+                self.update_display_string()
 
-            # Handle events depending on mode.
-            # not no_button and not debug: show output on display and detect GPIO press.
-            # debug: show output in command line.
-            # no_button and not debug: show output on display, but detect key strokes.
+                # Handle events depending on mode.
+                # not no_button and not debug: show output on display and detect GPIO press.
+                # debug: show output in command line.
+                # no_button and not debug: show output on display, but detect key strokes.
 
-            # Update LCD display or command line.
+                # Update LCD display or command line.
+                if debug:
+                    self.print_display_debug()
+                else:
+                    self.print_display()
+
+                # Detect key or button press.
+                if not debug and not self.no_button:
+                    # Detect button press.
+                    if GPIO.input(self.gpio['button_1']) == GPIO.HIGH and self.check_last_press():
+                        print('Button 1')
+                        self.cb_button_1()
+                    if GPIO.input(self.gpio['button_2']) == GPIO.HIGH and self.check_last_press():
+                        print('Button 2')
+                        self.cb_button_2()
+
+                else:
+                    # Detect button press.
+                    # TODO: Reset to keyboard.
+                    for ev in pygame.event.get():
+                        if ev.type == pygame.KEYDOWN:
+                            if ev.key == pygame.K_KP1:
+                                self.cb_button_1()
+                            if ev.key == pygame.K_KP2:
+                                self.cb_button_2()
+
+        # Except errors and print Error in display.
+        except:
+            ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
+                                                      self.cur_set_time_decoded[2],
+                                                      floor(self.cur_set_time_decoded[3] / 100))
+            self.display_string = ['ERROR!          ', 'Ref: {}    '.format(ref_time_str)]
             if debug:
                 self.print_display_debug()
             else:
                 self.print_display()
-
-            # Detect key or button press.
-            if not debug and not self.no_button:
-                # Detect button press.
-                if GPIO.input(self.gpio['button_1']) == GPIO.HIGH and self.check_last_press():
-                    print('Button 1')
-                    self.cb_button_1()
-                if GPIO.input(self.gpio['button_2']) == GPIO.HIGH and self.check_last_press():
-                    print('Button 2')
-                    self.cb_button_2()
-
-            else:
-                # Detect button press.
-                # TODO: Reset to keyboard.
-                for ev in pygame.event.get():
-                    if ev.type == pygame.KEYDOWN:
-                        if ev.key == pygame.K_KP1:
-                            self.cb_button_1()
-                        if ev.key == pygame.K_KP2:
-                            self.cb_button_2()
 
     # Writes the display string for the LCD display.
     # Consists of two lines with exactly 16 chars. Format as below
