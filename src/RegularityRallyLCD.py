@@ -137,11 +137,18 @@ class RegularityRallyLCD(RegularityRally):
                     # Detect Button 3 press.
                     if GPIO.input(self.gpio['button_3']) == GPIO.HIGH and self.check_last_press():
                         print('Button 3')
+                        # Perform reset.
                         self.cb_button_3()
-            
+
+                        # Exit the exception loop.
+                        break
+
             # Else, re-raise the exception.
             else:
                 raise err
+
+        # Enter another mainloop after caught and reset error.
+        self.mainloop()
 
     # Writes the display string for the LCD display.
     # Consists of two lines with exactly 16 chars. Format as below
