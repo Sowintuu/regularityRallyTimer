@@ -119,6 +119,8 @@ class RegularityRallyLCD(RegularityRally):
 
         # Except errors and print Error in display.
         except Exception as err:
+            print(err)
+            
             # Get current ref time.
             ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
                                                       self.cur_set_time_decoded[2],
