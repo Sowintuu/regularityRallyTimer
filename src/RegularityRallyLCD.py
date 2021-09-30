@@ -105,7 +105,6 @@ class RegularityRallyLCD(RegularityRally):
                         print('Button 3')
                         self.cb_button_3()
 
-
                 else:
                     # Detect button press.
                     # TODO: Reset to keyboard.
@@ -119,7 +118,7 @@ class RegularityRallyLCD(RegularityRally):
                                 self.cb_button_3()
 
         # Except errors and print Error in display.
-        except Exception as e:
+        except Exception as err:
             # Get current ref time.
             ref_time_str = '{:02}:{:02}.{:01}'.format(self.cur_set_time_decoded[1],
                                                       self.cur_set_time_decoded[2],
@@ -132,8 +131,17 @@ class RegularityRallyLCD(RegularityRally):
             else:
                 self.print_display()
 
-            # Re-raise the exception.
-            raise e
+            # If in Pi mode, enter loop again to check for restart.
+            if not debug:
+                while True:
+                    # Detect Button 3 press.
+                    if GPIO.input(self.gpio['button_3']) == GPIO.HIGH and self.check_last_press():
+                        print('Button 3')
+                        self.cb_button_3()
+            
+            # Else, re-raise the exception.
+            else:
+                raise err
 
     # Writes the display string for the LCD display.
     # Consists of two lines with exactly 16 chars. Format as below
