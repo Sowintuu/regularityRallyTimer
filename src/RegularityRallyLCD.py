@@ -68,7 +68,8 @@ class RegularityRallyLCD(RegularityRally):
                                                                   self.BUTTON_DEBOUNCE_TIME_DEFAULT))
 
         # Print init finished.
-        print('Initialization finished.')
+        if not debug:
+            print('Initialization finished.')
 
         # Run mainloop
         self.mainloop()
@@ -100,16 +101,22 @@ class RegularityRallyLCD(RegularityRally):
                     if GPIO.input(self.gpio['button_2']) == GPIO.HIGH and self.check_last_press():
                         print('Button 2')
                         self.cb_button_2()
+                    if GPIO.input(self.gpio['button_3']) == GPIO.HIGH and self.check_last_press():
+                        print('Button 3')
+                        self.cb_button_3()
+
 
                 else:
                     # Detect button press.
                     # TODO: Reset to keyboard.
                     for ev in pygame.event.get():
                         if ev.type == pygame.KEYDOWN:
-                            if ev.key == pygame.K_KP1:
+                            if ev.key == pygame.K_KP1 or ev.key == pygame.K_1:
                                 self.cb_button_1()
-                            if ev.key == pygame.K_KP2:
+                            if ev.key == pygame.K_KP2 or ev.key == pygame.K_2:
                                 self.cb_button_2()
+                            if ev.key == pygame.K_KP3 or ev.key == pygame.K_3:
+                                self.cb_button_3()
 
         # Except errors and print Error in display.
         except Exception as e:
@@ -224,6 +231,9 @@ class RegularityRallyLCD(RegularityRally):
         # Execute superclass method.
         self.mark_reached()
 
+    def cb_button_3(self):
+        self.reset_config()
+
     def read_gpio_cfg(self):
         # Init config.
         cfg = configparser.ConfigParser()
@@ -297,6 +307,7 @@ class RegularityRallyLCD(RegularityRally):
         # Set GPIO setting to input for buttons.
         GPIO.setup(self.gpio['button_1'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.gpio['button_2'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.gpio['button_3'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
         # Clear the LCD initially. (?)
         self.lcd_send_byte(0x33, GPIO.LOW)
